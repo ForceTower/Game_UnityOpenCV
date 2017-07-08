@@ -48,7 +48,7 @@ public class LevelCreator : MonoBehaviour {
         if (_CurrentState == 9) {
             LevelDetectionPipeline.SetupBlackPlatforms(ref _BlackPlatforms);
             Debug.Log("Detected " + _BlackPlatforms + " Platforms");
-            //SetStage(1);
+            SetStage(1);
         }
     }
 
