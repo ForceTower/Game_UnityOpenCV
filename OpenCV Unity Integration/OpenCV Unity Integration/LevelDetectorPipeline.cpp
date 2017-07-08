@@ -237,6 +237,8 @@ inline void BlueGreenYellowSeparation () {
 }
 
 void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
+	foundPoints.clear ();
+
 	vector<Vec3f> circles;
 	//Aply Hough Transform to detect Circles
 	HoughCircles (image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 8, 100, 20, 0, 0);
@@ -268,6 +270,8 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 }
 
 void FindCircle (Mat& image, vector<Point>& foundPoints) {
+	foundPoints.clear ();
+
 	vector<Vec3f> circles;
 	//Aply Hough Transform to detect Circles
 	HoughCircles (image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 8, 100, 20, 0, 0);
@@ -281,6 +285,8 @@ void FindCircle (Mat& image, vector<Point>& foundPoints) {
 }
 
 void PrepareStartEndEnemies () {
+	_BlueEnemies.clear ();
+
 	if (_LevelStartPoints.size () > 0) {
 		Point p = _LevelStartPoints.at (0);
 		_PlayerStart = LevelElement (p.x, p.y);
@@ -299,6 +305,7 @@ void PrepareStartEndEnemies () {
 }
 
 void CountSelectedInImage (Mat image, int& number, vector<LevelElement> fillVector, Rect ignore) {
+	fillVector.clear ();
 	int height = image.rows;
 	int width = image.cols;
 
