@@ -115,10 +115,11 @@ void detect(Mat inputImage, Mat& outputImage) {
     Mat yellowInImage;
     detectYellow(hsvImage, yellowInImage);
 
-    redImageProc(redInImage);
+    vector<Point> pointsRed;
+    findCircleCircle(redInImage, pointsRed);
 
-    vector<Point> points;
-    findCircleCircle(greenInImage, points);
+    vector<Point> pointsGreen;
+    findCircleCircle(greenInImage, pointsGreen);
 
     bitwise_or(redInImage, blackInImage, outputImage);
     bitwise_or(blueInImage, outputImage, outputImage);
@@ -163,8 +164,7 @@ void detectYellow(Mat hsvImage, Mat& yellowInImage) {
 }
 
 void redImageProc(Mat& redInImage) {
-    vector<Point> points;
-    findCircleCircle(redInImage, points);
+
 }
 
 void findCircleCircle(Mat& image, vector<Point>& foundPoints) {
