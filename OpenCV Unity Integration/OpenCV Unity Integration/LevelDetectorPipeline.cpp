@@ -77,6 +77,8 @@ extern "C" int __declspec(dllexport) __stdcall Init (int& outCameraWidth, int& o
 extern "C" void __declspec(dllexport) __stdcall Close () {
 	//Releases the camera
 	_Capture.release ();
+
+	_CurrentState = 0;
 }
 
 extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn, int& stateOut) {
