@@ -191,6 +191,8 @@ void TakePicture () {
 
 	//Resizes the image
 	resize (_InputImage, _InputImage, _ImageSize);
+    namedWindow ("Resized Image");
+    imshow ("Resized Image", _InputImage);
 
 	_CurrentState = 2;
 }

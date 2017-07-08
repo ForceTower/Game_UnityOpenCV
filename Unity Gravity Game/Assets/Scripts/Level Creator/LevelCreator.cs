@@ -5,9 +5,14 @@ using UnityEngine;
 public class LevelCreator : MonoBehaviour {
     public static Vector2 CameraResolution;
 
+    public Transform m_DefaultPlatform;
+
+    private Transform[] _DefaultPlatformInstances; 
+
     private bool _Ready = false;
     private int _CurrentState = 0;
     private int _BlackPlatforms;
+    private LevelDetectionPipeline.LevelElement[] _BlackPlatformsElements;
 
     // Use this for initialization
     void Start () {
@@ -24,6 +29,15 @@ public class LevelCreator : MonoBehaviour {
 
         CameraResolution = new Vector2(cameraWidth, cameraHeight);
         _Ready = true;
+
+        //_DefaultPlatformInstances = new Transform[204000];
+        //GenerateDefaultPlatformsInstances();
+    }
+
+    void GenerateDefaultPlatformsInstances () {
+        for (uint i = 0; i < _DefaultPlatformInstances.Length; i++) {
+            //_DefaultPlatformInstances[i] = Instantiate (m_DefaultPlatform, new Vector3 (0, 0, 0), Quaternion.identity);
+        }
     }
 	
 	// Update is called once per frame
@@ -46,13 +60,42 @@ public class LevelCreator : MonoBehaviour {
 
     void LevelCreation () {
         if (_CurrentState == 9) {
-            LevelDetectionPipeline.SetupBlackPlatforms(ref _BlackPlatforms);
-            Debug.Log("Detected " + _BlackPlatforms + " Platforms");
-            SetStage(1);
+            SetupDefaultPlatforms ();
+        } else if (_CurrentState == 10) {
+            GetDefaultPlatforms ();
+        } else if (_CurrentState == 11) {
+            MountDefaultPlatforms ();
         }
     }
 
-    void SetStage(int value) {
+    void SetupDefaultPlatforms () {
+        LevelDetectionPipeline.SetupBlackPlatforms(ref _BlackPlatforms);
+        Debug.Log("Detected " + _BlackPlatforms + " Platforms");
+        _CurrentState = 10;
+    }
+
+    void GetDefaultPlatforms () {
+        _BlackPlatformsElements = new LevelDetectionPipeline.LevelElement[_BlackPlatforms];
+
+        unsafe {
+            fixed (LevelDetectionPipeline.LevelElement* arrayAddress = _BlackPlatformsElements) {
+                LevelDetectionPipeline.GetBlackPlatforms(arrayAddress, _BlackPlatforms, ref _BlackPlatforms);
+            }
+        }
+
+        _CurrentState = 11;
+    }
+
+    void MountDefaultPlatforms () { 
+        for (int i = 0; i < _BlackPlatformsElements.Length; i++) {
+            Vector3 position = new Vector3 (_BlackPlatformsElements[i].X, _BlackPlatformsElements[i].Y, 0);
+            //Instantiate (m_DefaultPlatform, position, Quaternion.identity);
+        }
+
+        _CurrentState = 12;
+    }
+
+    void SetStage (int value) {
         LevelDetectionPipeline.SetState(value);
         _CurrentState = value;
     }
