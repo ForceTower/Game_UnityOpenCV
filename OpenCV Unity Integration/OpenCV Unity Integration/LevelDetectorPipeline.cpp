@@ -81,6 +81,10 @@ extern "C" void __declspec(dllexport) __stdcall Close () {
 	_CurrentState = 0;
 }
 
+extern "C" void __declspec(dllexport) __stdcall SetState (int state) {
+	_CurrentState = state;
+}
+
 extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn, int& stateOut) {
 	stateIn = _CurrentState;
 
