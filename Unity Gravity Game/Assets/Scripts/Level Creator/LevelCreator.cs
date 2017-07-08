@@ -37,8 +37,6 @@ public class LevelCreator : MonoBehaviour {
         } else {
             LevelCreation();
         }
-
-        Debug.Log("Stage [In: " + stageIn + "] .. [Out: " + _CurrentState + "]");
     }
 
     void OnApplicationQuit () {
@@ -50,7 +48,7 @@ public class LevelCreator : MonoBehaviour {
         if (_CurrentState == 9) {
             LevelDetectionPipeline.SetupBlackPlatforms(ref _BlackPlatforms);
             Debug.Log("Detected " + _BlackPlatforms + " Platforms");
-            SetStage(1);
+            //SetStage(1);
         }
     }
 

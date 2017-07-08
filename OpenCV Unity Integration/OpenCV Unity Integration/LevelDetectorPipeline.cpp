@@ -186,7 +186,7 @@ extern "C" void __declspec(dllexport) __stdcall GetBluePlatforms (LevelElement* 
 	platformsCount = _BluePlatforms.size ();
 }
 
-inline void TakePicture () {
+void TakePicture () {
 	_Capture >> _InputImage;
 
 	//Resizes the image
@@ -195,7 +195,7 @@ inline void TakePicture () {
 	_CurrentState = 2;
 }
 
-inline void ImageEnhancement () {
+void ImageEnhancement () {
 	//Blur Image a little
 	medianBlur (_InputImage, _InputImage, 3);
 
@@ -205,7 +205,7 @@ inline void ImageEnhancement () {
 	_CurrentState = 3;
 }
 
-inline void RedDarkSeparation () {
+void RedDarkSeparation () {
 	// Red Detection occurs in 2 steps, Lower and Upper fields
 	Mat lowerRed;
 	inRange (_InputImage, Scalar (0, 100, 100), Scalar (10, 255, 255), lowerRed);
@@ -223,7 +223,7 @@ inline void RedDarkSeparation () {
 	_CurrentState = 4;
 }
 
-inline void BlueGreenYellowSeparation () {
+void BlueGreenYellowSeparation () {
 	// Blue Detection
 	inRange (_InputImage, Scalar (85, 70, 70), Scalar (135, 255, 255), _BlueImage);
 
@@ -254,18 +254,23 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 		rect.width = radius * 2 - 1;
 		rect.height = radius * 2 - 1;
 
-		Mat croppedImage = image (rect); //Crop the image
+        try {
+            Mat croppedImage = image (rect); //Crop the image
 
-		vector<Vec3f> insideCircles;
-		//Apply Hough Transform im the cropped image to find circles inside the circle
-		HoughCircles (croppedImage, insideCircles, CV_HOUGH_GRADIENT, 1, croppedImage.rows / 8, 100, 20, 0, 0);
+            vector<Vec3f> insideCircles;
+            //Apply Hough Transform im the cropped image to find circles inside the circle
+            HoughCircles (croppedImage, insideCircles, CV_HOUGH_GRADIENT, 1, croppedImage.rows / 8, 100, 20, 0, 0);
 
-		//If detected a circle inside a circle, insert it in the vector
-		if (!insideCircles.empty ()) {
-			foundPoints.push_back (center);
-			save = rect;
-			return; //Only one should be selected
-		}
+            //If detected a circle inside a circle, insert it in the vector
+            if (!insideCircles.empty ()) {
+                foundPoints.push_back (center);
+                save = rect;
+                return; //Only one should be selected
+            }
+        }
+        catch (const exception& ex) {
+            //cout << "Exception :" << ex.what () << endl;
+        }
 	}
 }
 
@@ -322,3 +327,26 @@ void CountSelectedInImage (Mat image, int& number, vector<LevelElement> fillVect
 
 	number = count;
 }
+
+/*
+int main () {
+    int a = 0, b = 0;
+    Init (a, b);
+    b = 0;
+    while (1) {
+        if (b < 9)
+            DetectionPipeline (a, b);
+        else {
+            int n;
+            SetupBlackPlatforms (n);
+            cout << "Detected Black: " << n << endl;
+            SetState (1);
+            b = 1;
+        }
+
+        cout << "A: " << a << " B: " << b << endl;
+
+        waitKey (30);
+    }
+}
+*/
