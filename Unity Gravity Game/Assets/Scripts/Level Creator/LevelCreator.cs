@@ -9,8 +9,8 @@ public class LevelCreator : MonoBehaviour {
     private int _CurrentState = 0;
     private int _BlackPlatforms;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
         int cameraWidth = 0;
         int cameraHeight = 0;
 
@@ -24,10 +24,10 @@ public class LevelCreator : MonoBehaviour {
 
         CameraResolution = new Vector2(cameraWidth, cameraHeight);
         _Ready = true;
-	}
+    }
 	
 	// Update is called once per frame
-	void Update () {
+    void Update () {
         if (!_Ready)
             return;
         int stageIn = -2;
@@ -39,7 +39,7 @@ public class LevelCreator : MonoBehaviour {
         }
 
         Debug.Log("Stage [In: " + stageIn + "] .. [Out: " + _CurrentState + "]");
-	}
+    }
 
     void OnApplicationQuit () {
         if (_Ready)
