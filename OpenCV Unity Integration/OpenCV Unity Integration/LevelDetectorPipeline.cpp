@@ -21,9 +21,9 @@ void BlueGreenYellowSeparation ();
 void PrepareStartEndEnemies ();
 void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& saved = Rect());
 void FindCircle (Mat& image, vector<Point>& foundPoints);
-void CountSelectedInImage (Mat image, int& number, vector<LevelElement> fillVector, Rect ignore = Rect());
+void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVector, Rect ignore = Rect());
 
-Size _ImageSize;			//Default Resize size
+Size _ImageSize;		//Default Resize size
 
 VideoCapture _Capture;	//Camera Buffer
 int _CurrentState;		//State Machine State
@@ -66,7 +66,7 @@ extern "C" int __declspec(dllexport) __stdcall Init (int& outCameraWidth, int& o
 	outCameraHeight = (int)_Capture.get (CAP_PROP_FRAME_HEIGHT);
 
 	//Sets default resize
-	_ImageSize = Size (640, 360);
+	_ImageSize = Size (80, 45);
 
 	//Set State to Ready (Start)
 	_CurrentState = 1;
@@ -147,7 +147,10 @@ extern "C" void __declspec(dllexport) __stdcall SetupRedPlatforms (int& number) 
 }
 
 extern "C" void __declspec(dllexport) __stdcall GetBlackPlatforms (LevelElement* platforms, int maxPlatformsCount, int& platformsCount) {
+    //cout << "Called GetBlackPlatforms" << endl;
 	for (size_t i = 0; i < _BlackPlatforms.size () && i < maxPlatformsCount; i++) {
+        LevelElement e = _BlackPlatforms.at (i);
+        //cout << "X: " << e.X << " - Y: " << e.Y << endl;
 		platforms[i] = _BlackPlatforms.at (i);
 	}
 
@@ -190,9 +193,11 @@ void TakePicture () {
 	_Capture >> _InputImage;
 
 	//Resizes the image
+    namedWindow ("Original Image");
+    imshow ("Original Image", _InputImage);
 	resize (_InputImage, _InputImage, _ImageSize);
-    namedWindow ("Resized Image");
-    imshow ("Resized Image", _InputImage);
+    
+    
 
 	_CurrentState = 2;
 }
@@ -220,7 +225,7 @@ void RedDarkSeparation () {
 	bitwise_or (lowerRed, upperRed, _RedImage);
 
 	// Dark Detection
-	inRange (_InputImage, Scalar (0, 0, 0), Scalar (180, 255, 160), _DarkImage);
+	inRange (_InputImage, Scalar (0, 0, 0), Scalar (180, 255, 80), _DarkImage);
 
 	_CurrentState = 4;
 }
@@ -311,7 +316,7 @@ void PrepareStartEndEnemies () {
 	}
 }
 
-void CountSelectedInImage (Mat image, int& number, vector<LevelElement> fillVector, Rect ignore) {
+void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVector, Rect ignore) {
 	fillVector.clear ();
 	int height = image.rows;
 	int width = image.cols;
@@ -322,7 +327,9 @@ void CountSelectedInImage (Mat image, int& number, vector<LevelElement> fillVect
 		for (int j = 0; j < width; j++) {
 			if (image.at<uchar> (i, j) && !ignore.contains(Point(i, j))) {
 				count++;
-				fillVector.push_back (LevelElement (i, j));
+                LevelElement element (i, j);
+				fillVector.push_back (element);
+                //cout << "In Element X: " << element.X << " and J: " << element.Y << endl;
 			}
 		}
 	}
@@ -342,13 +349,16 @@ int main () {
             int n;
             SetupBlackPlatforms (n);
             cout << "Detected Black: " << n << endl;
-            SetState (1);
+            LevelElement k[3800];
+            int a;
+            GetBlackPlatforms (k, n, a);
+            //SetState (1);
+            waitKey (1000);
             b = 1;
         }
 
-        cout << "A: " << a << " B: " << b << endl;
+        //cout << "A: " << a << " B: " << b << endl;
 
         waitKey (30);
     }
-}
-*/
+}*/

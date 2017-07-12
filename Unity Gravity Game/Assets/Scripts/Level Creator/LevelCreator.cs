@@ -30,13 +30,13 @@ public class LevelCreator : MonoBehaviour {
         CameraResolution = new Vector2(cameraWidth, cameraHeight);
         _Ready = true;
 
-        //_DefaultPlatformInstances = new Transform[204000];
-        //GenerateDefaultPlatformsInstances();
+        _DefaultPlatformInstances = new Transform[3600];
+        GenerateDefaultPlatformsInstances();
     }
 
     void GenerateDefaultPlatformsInstances () {
         for (uint i = 0; i < _DefaultPlatformInstances.Length; i++) {
-            //_DefaultPlatformInstances[i] = Instantiate (m_DefaultPlatform, new Vector3 (0, 0, 0), Quaternion.identity);
+            _DefaultPlatformInstances[i] = Instantiate (m_DefaultPlatform, new Vector3 (0, 0, 0), Quaternion.identity);
         }
     }
 	
@@ -65,6 +65,8 @@ public class LevelCreator : MonoBehaviour {
             GetDefaultPlatforms ();
         } else if (_CurrentState == 11) {
             MountDefaultPlatforms ();
+        } else if (_CurrentState == 12) {
+            SetStage (1);
         }
     }
 
@@ -86,10 +88,18 @@ public class LevelCreator : MonoBehaviour {
         _CurrentState = 11;
     }
 
-    void MountDefaultPlatforms () { 
-        for (int i = 0; i < _BlackPlatformsElements.Length; i++) {
-            Vector3 position = new Vector3 (_BlackPlatformsElements[i].X, _BlackPlatformsElements[i].Y, 0);
-            //Instantiate (m_DefaultPlatform, position, Quaternion.identity);
+    void MountDefaultPlatforms () {
+        int i;
+        for (i = 0; i < _BlackPlatformsElements.Length; i++) {
+            Vector3 position = new Vector3 (-1*_BlackPlatformsElements[i].Y, -1*_BlackPlatformsElements[i].X, 0);
+            _DefaultPlatformInstances[i].gameObject.SetActive (true);
+            _DefaultPlatformInstances[i].position = position;
+        }
+
+        //Debug.Log ("I: " + i + " Len: " + _BlackPlatformsElements.Length);
+
+        for (int j = i; j < _DefaultPlatformInstances.Length; j++) {
+            _DefaultPlatformInstances[j].gameObject.SetActive (false);
         }
 
         _CurrentState = 12;
