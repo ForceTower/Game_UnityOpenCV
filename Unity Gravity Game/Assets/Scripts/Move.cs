@@ -15,14 +15,19 @@ public class Move : MonoBehaviour {
     private bool end;
 
     void Start() {
-        if (margin == 0)
-            margin = 0.1f;
 
     }
 
     void Update() {
          if (go || startGo)
-            move();
+            move(3, 10, -2);
+    }
+
+    public void move(float x, float y, float z) {
+        endMarker.x = x;
+        endMarker.y = y;
+        endMarker.z = z;
+        move();
     }
 
     public void move() {
