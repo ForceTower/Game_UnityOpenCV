@@ -6,13 +6,13 @@ public class ChangeColor : MonoBehaviour {
     public Color endColor;
     public float timeToColor = 1.0F;
     public bool go;
+    public bool finished;
 
     private Material myMaterial;
     private Color startColor;
     private float actualTime;
     private float endTime;
     private bool startGo;
-    private bool end;
 
     private MeshRenderer myMesh;
 
@@ -28,11 +28,10 @@ public class ChangeColor : MonoBehaviour {
             colorize();
     }
 
-    public void colorize(uint r, uint g, uint b) {    
-        endColor.r = r;
-        endColor.g = g;
-        endColor.b = b;
-        colorize();
+    public void start(Color color, float time) {
+        timeToColor = time;
+        endColor = color;
+        go = true;
     }
 
     public void colorize() {
@@ -40,10 +39,10 @@ public class ChangeColor : MonoBehaviour {
             startColor = myMaterial.color;
             go = false;
             startGo = true;
-            end = false;
+            finished = false;
         }
 
-        if (!end)
+        if (!finished)
             colorize(endColor);
     }
 
@@ -58,8 +57,16 @@ public class ChangeColor : MonoBehaviour {
 
     public bool arrivedColor() {
         actualTime = 0;
-        end = true;
+        finished = true;
         startGo = false;
-        return end;
+        return finished;
+    }
+
+    public void colorize(uint r, uint g, uint b, float time) {
+        timeToColor = time;
+        endColor.r = r;
+        endColor.g = g;
+        endColor.b = b;
+        colorize();
     }
 }

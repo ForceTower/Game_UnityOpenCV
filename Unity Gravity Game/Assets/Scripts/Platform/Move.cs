@@ -7,12 +7,12 @@ public class Move : MonoBehaviour {
     public float speed = 1.0F;
     public float margin;
     public bool go;
+    public bool finished;
 
     private Vector3 startMarker;
     private float startTime;
     private float journeyLength;
     private bool startGo;
-    private bool end;
 
     void Start() {
 
@@ -20,14 +20,13 @@ public class Move : MonoBehaviour {
 
     void Update() {
          if (go || startGo)
-            move(3, 10, -2);
+            move();
     }
 
-    public void move(float x, float y, float z) {
-        endMarker.x = x;
-        endMarker.y = y;
-        endMarker.z = z;
-        move();
+    public void start(Vector3 target, float speed) {
+        endMarker = target;
+        this.speed = speed;
+        go = true;
     }
 
     public void move() {
@@ -37,9 +36,9 @@ public class Move : MonoBehaviour {
             journeyLength = Vector3.Distance(startMarker, endMarker);
             go = !go;
             startGo = true;
-            end = false;
+            finished = false;
         }
-        if(!end)
+        if(!finished)
             move(endMarker);
     }
 
@@ -55,8 +54,16 @@ public class Move : MonoBehaviour {
     }
 
     public bool arrivedDestiny() {
-        end = true;
+        finished = true;
         startGo = false;
-        return end;
+        return finished;
+    }
+
+    public void move(float x, float y, float z, float speed) {
+        this.speed = speed;
+        endMarker.x = x;
+        endMarker.y = y;
+        endMarker.z = z;
+        move();
     }
 }
