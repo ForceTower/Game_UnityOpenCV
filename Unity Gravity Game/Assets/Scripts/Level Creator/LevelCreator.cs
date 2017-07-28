@@ -1,13 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelCreator : MonoBehaviour {
     public static Vector2 CameraResolution;
 
-    public ControllerPlatform m_DefaultPlatform;
+    public CubeMovementAndColor m_DefaultPlatform;
 
-    private ControllerPlatform[] _DefaultPlatformInstances; 
+    private CubeMovementAndColor[] _DefaultPlatformInstances; 
 
     private bool _Ready = false;
     private int _CurrentState = 0;
@@ -30,13 +31,13 @@ public class LevelCreator : MonoBehaviour {
         CameraResolution = new Vector2(cameraWidth, cameraHeight);
         _Ready = true;
 
-        _DefaultPlatformInstances = new ControllerPlatform[3600];
+        _DefaultPlatformInstances = new CubeMovementAndColor[3600];
         GenerateDefaultPlatformsInstances();
     }
 
     void GenerateDefaultPlatformsInstances () {
         for (uint i = 0; i < _DefaultPlatformInstances.Length; i++) {
-            _DefaultPlatformInstances[i] = Instantiate<ControllerPlatform> (m_DefaultPlatform, new Vector3 (0, 0, 0), Quaternion.identity);
+            _DefaultPlatformInstances[i] = Instantiate<CubeMovementAndColor> (m_DefaultPlatform, new Vector3 (0, 0, 0), Quaternion.identity);
         }
     }
 	
@@ -67,7 +68,13 @@ public class LevelCreator : MonoBehaviour {
             MountDefaultPlatforms ();
         } else if (_CurrentState == 12) {
             SetStage (1);
+        } else if (_CurrentState == 18) {
+            SetupWaitingState ();
         }
+    }
+
+    private void SetupWaitingState () {
+        
     }
 
     void SetupDefaultPlatforms () {
@@ -93,7 +100,7 @@ public class LevelCreator : MonoBehaviour {
         for (i = 0; i < _BlackPlatformsElements.Length; i++) {
             Vector3 position = new Vector3 (-1*_BlackPlatformsElements[i].Y, -1*_BlackPlatformsElements[i].X, 0);
             _DefaultPlatformInstances[i].gameObject.SetActive (true);
-            _DefaultPlatformInstances[i].Go (position, Color.blue, 60);
+            _DefaultPlatformInstances[i].ChangeToColorAndPosition (position, Color.blue, 2);
         }
 
         //Debug.Log ("I: " + i + " Len: " + _BlackPlatformsElements.Length);
@@ -102,7 +109,7 @@ public class LevelCreator : MonoBehaviour {
             _DefaultPlatformInstances[j].gameObject.SetActive (false);
         }
 
-        _CurrentState = 17;
+        _CurrentState = 12;
     }
 
     void SetStage (int value) {
