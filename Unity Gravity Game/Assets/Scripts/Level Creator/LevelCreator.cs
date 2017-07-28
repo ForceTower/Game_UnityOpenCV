@@ -220,6 +220,12 @@ public class LevelCreator : MonoBehaviour {
         if (_WaitingTime >= 1) {
             _WaitingTime = 0;
             _CurrentState = 20;
+
+            if (!_ShouldRestartPipeline) {
+                LevelDetectionPipeline.Close ();
+                gameObject.SetActive (false);
+            }
+
         }
     }
 
