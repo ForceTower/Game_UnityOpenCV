@@ -20,16 +20,16 @@ public class Move : MonoBehaviour {
 
     void Update() {
          if (go || startGo)
-            move();
+            MoveComponent();
     }
 
-    public void start(Vector3 target, float speed) {
+    public void StartMove(Vector3 target, float speed) {
         endMarker = target;
         this.speed = speed;
         go = true;
     }
 
-    public void move() {
+    public void MoveComponent() {
         if (go) {
             startMarker = transform.position;
             startTime = Time.time;
@@ -39,31 +39,32 @@ public class Move : MonoBehaviour {
             finished = false;
         }
         if(!finished)
-            move(endMarker);
+            MoveComponent(endMarker);
     }
 
-    public void move(Vector3 endMarker) {
+    public void MoveComponent(Vector3 endMarker) {
         float distCovered = (Time.time - startTime) * speed;
         float fracJourney = distCovered / journeyLength;
         transform.position = Vector3.Lerp(startMarker, endMarker, fracJourney);
-        // verifiyng arrived at destiny
+        GetComponent<ChangeColor> ().timeToColor = fracJourney;
+        // verifying arrived at destiny
         float actualDistance = Vector3.Distance(transform.position, endMarker);
 
         if (actualDistance < margin)
-            arrivedDestiny();
+            ArrivedDestiny();
     }
 
-    public bool arrivedDestiny() {
+    public bool ArrivedDestiny() {
         finished = true;
         startGo = false;
         return finished;
     }
 
-    public void move(float x, float y, float z, float speed) {
+    public void MoveComponent(float x, float y, float z, float speed) {
         this.speed = speed;
         endMarker.x = x;
         endMarker.y = y;
         endMarker.z = z;
-        move();
+        MoveComponent();
     }
 }

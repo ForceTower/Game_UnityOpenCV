@@ -5,9 +5,9 @@ using UnityEngine;
 public class LevelCreator : MonoBehaviour {
     public static Vector2 CameraResolution;
 
-    public Transform m_DefaultPlatform;
+    public ControllerPlatform m_DefaultPlatform;
 
-    private Transform[] _DefaultPlatformInstances; 
+    private ControllerPlatform[] _DefaultPlatformInstances; 
 
     private bool _Ready = false;
     private int _CurrentState = 0;
@@ -30,13 +30,13 @@ public class LevelCreator : MonoBehaviour {
         CameraResolution = new Vector2(cameraWidth, cameraHeight);
         _Ready = true;
 
-        _DefaultPlatformInstances = new Transform[3600];
+        _DefaultPlatformInstances = new ControllerPlatform[3600];
         GenerateDefaultPlatformsInstances();
     }
 
     void GenerateDefaultPlatformsInstances () {
         for (uint i = 0; i < _DefaultPlatformInstances.Length; i++) {
-            _DefaultPlatformInstances[i] = Instantiate (m_DefaultPlatform, new Vector3 (0, 0, 0), Quaternion.identity);
+            _DefaultPlatformInstances[i] = Instantiate<ControllerPlatform> (m_DefaultPlatform, new Vector3 (0, 0, 0), Quaternion.identity);
         }
     }
 	
@@ -93,7 +93,7 @@ public class LevelCreator : MonoBehaviour {
         for (i = 0; i < _BlackPlatformsElements.Length; i++) {
             Vector3 position = new Vector3 (-1*_BlackPlatformsElements[i].Y, -1*_BlackPlatformsElements[i].X, 0);
             _DefaultPlatformInstances[i].gameObject.SetActive (true);
-            _DefaultPlatformInstances[i].position = position;
+            _DefaultPlatformInstances[i].Go (position, Color.blue, 60);
         }
 
         //Debug.Log ("I: " + i + " Len: " + _BlackPlatformsElements.Length);
@@ -102,7 +102,7 @@ public class LevelCreator : MonoBehaviour {
             _DefaultPlatformInstances[j].gameObject.SetActive (false);
         }
 
-        _CurrentState = 12;
+        _CurrentState = 17;
     }
 
     void SetStage (int value) {

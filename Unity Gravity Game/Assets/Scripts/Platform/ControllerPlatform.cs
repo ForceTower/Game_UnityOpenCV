@@ -13,7 +13,6 @@ public class ControllerPlatform : MonoBehaviour {
     public float t;
     public bool b;
 
-
 	// Use this for initialization
 	void Start () {
         if (!scriptMove)
@@ -25,18 +24,18 @@ public class ControllerPlatform : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         if (b) {
-            go(v, c, t);
+            Go(v, c, t);
             b = !b;
         }
         if (scriptMove.finished && scriptColor.finished)
-            finished();
+            Finished();
 	}
 
-    public void go(Vector3 target, Color color, float factor) {
-        scriptMove.start(target, factor);
-        scriptColor.start(color, factor);
+    public void Go(Vector3 target, Color color, float factor) {
+        scriptMove.StartMove(target, factor);
+        scriptColor.StartColor(color, factor);
     }
 
-    private void finished() {
+    private void Finished() {
     }
 }

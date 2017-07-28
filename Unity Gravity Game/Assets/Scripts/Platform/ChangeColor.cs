@@ -25,16 +25,16 @@ public class ChangeColor : MonoBehaviour {
 
     void Update() {
         if (go || startGo)
-            colorize();
+            Colorize();
     }
 
-    public void start(Color color, float time) {
+    public void StartColor(Color color, float time) {
         timeToColor = time;
         endColor = color;
         go = true;
     }
 
-    public void colorize() {
+    public void Colorize() {
         if (go) {
             startColor = myMaterial.color;
             go = false;
@@ -43,30 +43,30 @@ public class ChangeColor : MonoBehaviour {
         }
 
         if (!finished)
-            colorize(endColor);
+            Colorize(endColor);
     }
 
-    public void colorize(Color endColor) {
+    public void Colorize(Color endColor) {
         actualTime += Time.deltaTime;
         float fracTime = actualTime / timeToColor;
         myMaterial.color = Color.Lerp(startColor, endColor, fracTime);
 
         if (actualTime >= timeToColor)
-            arrivedColor();
+            ArrivedColor();
     }
 
-    public bool arrivedColor() {
+    public bool ArrivedColor() {
         actualTime = 0;
         finished = true;
         startGo = false;
         return finished;
     }
 
-    public void colorize(uint r, uint g, uint b, float time) {
+    public void Colorize(uint r, uint g, uint b, float time) {
         timeToColor = time;
         endColor.r = r;
         endColor.g = g;
         endColor.b = b;
-        colorize();
+        Colorize();
     }
 }
