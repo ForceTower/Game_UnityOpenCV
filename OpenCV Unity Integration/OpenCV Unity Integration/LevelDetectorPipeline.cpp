@@ -1,6 +1,7 @@
 #include <opencv2\core.hpp>
 #include <opencv2\highgui.hpp>
 #include <opencv2\imgproc.hpp>
+#include <opencv2\imgcodecs.hpp>
 #include <vector>
 #include <iostream>
 
@@ -14,7 +15,7 @@ struct LevelElement {
 	int Y;
 };
 
-void TakePicture ();
+void TakePicture (int useReference);
 void ImageEnhancement ();
 void RedDarkSeparation ();
 void BlueGreenYellowSeparation ();
@@ -51,6 +52,9 @@ vector <LevelElement> _BluePlatforms;
 vector <LevelElement> _GreenPlatforms;
 vector <LevelElement> _BlueEnemies;
 
+bool _FoundStart;
+bool _FoundFinish;
+
 extern "C" int __declspec(dllexport) __stdcall Init (int& outCameraWidth, int& outCameraHeight) {
 	//Opens the Camera
 	_Capture.open (0);
@@ -66,7 +70,7 @@ extern "C" int __declspec(dllexport) __stdcall Init (int& outCameraWidth, int& o
 	outCameraHeight = (int)_Capture.get (CAP_PROP_FRAME_HEIGHT);
 
 	//Sets default resize
-	_ImageSize = Size (80, 45);
+	_ImageSize = Size (160, 90);
 
 	//Set State to Ready (Start)
 	_CurrentState = 1;
@@ -85,14 +89,14 @@ extern "C" void __declspec(dllexport) __stdcall SetState (int state) {
 	_CurrentState = state;
 }
 
-extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn, int& stateOut) {
+extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn, int& stateOut, int useReference) {
 	stateIn = _CurrentState;
 
 	if (_CurrentState == -1) //Error State
 		stateOut = -1;
 
 	else if (_CurrentState == 1) //Image Aquisition
-		TakePicture ();
+		TakePicture (useReference);
 
 	else if (_CurrentState == 2) //Image Enchancement 
 		ImageEnhancement ();
@@ -127,22 +131,32 @@ extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn,
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupBlackPlatforms (int& number) {
+    namedWindow ("Black");
+    imshow ("Black", _DarkImage);
 	CountSelectedInImage (_DarkImage, number, _BlackPlatforms);
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupYellowPlatforms (int& number) {
+    namedWindow ("Yellow");
+    imshow ("Yellow", _YellowImage);
 	CountSelectedInImage (_YellowImage, number, _YellowPlatforms);
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupBluePlatforms (int& number) {
+    namedWindow ("Blue");
+    imshow ("Blue", _BlueImage);
 	CountSelectedInImage (_BlueImage, number, _BluePlatforms);
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupGreenPlatforms (int& number) {
+    namedWindow ("Green");
+    imshow ("Green", _GreenImage);
 	CountSelectedInImage (_GreenImage, number, _GreenPlatforms, _GreenRect);
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupRedPlatforms (int& number) {
+    namedWindow ("Red");
+    imshow ("Red", _RedImage);
 	CountSelectedInImage (_RedImage, number, _RedPlatforms, _RedRect);
 }
 
@@ -189,15 +203,39 @@ extern "C" void __declspec(dllexport) __stdcall GetBluePlatforms (LevelElement* 
 	platformsCount = _BluePlatforms.size ();
 }
 
-void TakePicture () {
-	_Capture >> _InputImage;
+extern "C" bool __declspec(dllexport) __stdcall GetPlayerStartEnd (LevelElement* startEndPointer) {
+    startEndPointer[0] = _PlayerStart;
+    startEndPointer[1] = _PlayerFinish;
+
+    return _FoundStart & _FoundFinish;
+}
+
+extern "C" void __declspec(dllexport) __stdcall NumberOfBlueEnemies (int& enemiesCount) {
+    enemiesCount = _BlueEnemies.size ();
+}
+
+extern "C" void __declspec(dllexport) __stdcall GetBlueEnemies (LevelElement* enemies, int maxEnemiesCount, int& enemiesCount) {
+    for (size_t i = 0; i < _BlueEnemies.size () && i < maxEnemiesCount; i++) {
+        enemies[i] = _BlueEnemies.at (i);
+    }
+
+    enemiesCount = _BlueEnemies.size ();
+}
+
+void TakePicture (int useReference) {
+    if (useReference == 0)
+        _Capture >> _InputImage;
+    else {
+        cv::String name = cv::String ("C:/Users/joaop/Documents/FinalProject-CompVisual/basic.png");
+        _InputImage = imread (name);
+    }
 
 	//Resizes the image
     namedWindow ("Original Image");
     imshow ("Original Image", _InputImage);
 	resize (_InputImage, _InputImage, _ImageSize);
-    
-    
+    namedWindow ("Resized Image");
+    imshow ("Resized Image", _InputImage);
 
 	_CurrentState = 2;
 }
@@ -248,7 +286,7 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 
 	vector<Vec3f> circles;
 	//Aply Hough Transform to detect Circles
-	HoughCircles (image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 8, 100, 20, 0, 0);
+	HoughCircles (image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 10, 100, 4, 0, 0);
 
 	//For each circle detected
 	for (size_t current_circle = 0; current_circle < circles.size (); ++current_circle) {
@@ -266,7 +304,7 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 
             vector<Vec3f> insideCircles;
             //Apply Hough Transform im the cropped image to find circles inside the circle
-            HoughCircles (croppedImage, insideCircles, CV_HOUGH_GRADIENT, 1, croppedImage.rows / 8, 100, 20, 0, 0);
+            HoughCircles (croppedImage, insideCircles, CV_HOUGH_GRADIENT, 1, croppedImage.rows / 10, 100, 4, 0, 0);
 
             //If detected a circle inside a circle, insert it in the vector
             if (!insideCircles.empty ()) {
@@ -302,12 +340,20 @@ void PrepareStartEndEnemies () {
 	if (_LevelStartPoints.size () > 0) {
 		Point p = _LevelStartPoints.at (0);
 		_PlayerStart = LevelElement (p.x, p.y);
-	}
+        _FoundStart = true;
+    }
+    else {
+        _FoundStart = false;
+    }
 
 	if (_LevelEndPoints.size () > 0) {
 		Point p = _LevelEndPoints.at (0);
 		_PlayerFinish = LevelElement (p.x, p.y);
-	}
+        _FoundFinish = true;
+    }
+    else {
+        _FoundFinish = false;
+    }
 
 	Point temp;
 	for (size_t i = 0; i < _LevelBlueEnemies.size (); i++) {
@@ -325,7 +371,7 @@ void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVec
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			if (image.at<uchar> (i, j) && !ignore.contains(Point(i, j))) {
+			if (image.at<uchar> (i, j) /*&& !ignore.contains(Point(i, j))*/) {
 				count++;
                 LevelElement element (i, j);
 				fillVector.push_back (element);

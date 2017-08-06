@@ -7,22 +7,35 @@ public class LevelCreator : MonoBehaviour {
     public static Vector2 CameraResolution;
 
     public CubeMovementAndColor m_DefaultPlatform;
-    private CubeMovementAndColor[] _DefaultPlatformInstances; 
+    public StationaryEnemy m_DefaultEnemy;
+    public LevelStart m_StartTransform;
+    public LevelFinish m_FinishTransform;
+    public Transform m_Player;
+
+    public int m_MaxEnemiesInLevel;
+
+    private CubeMovementAndColor[] _DefaultPlatformInstances;
+    private StationaryEnemy[] _DefaultEnemyInstances;
 
     private bool _Ready = false;
     private int _CurrentState = 0;
+
+    private bool _GameStarted = false;
 
     private int _BlackPlatforms;
     private int _RedPlatforms;
     private int _YellowPlatforms;
     private int _GreenPlatforms;
     private int _BluePlatforms;
+    private int _BlueEnemies;
 
     private LevelDetectionPipeline.LevelElement[] _BlackPlatformsElements;
     private LevelDetectionPipeline.LevelElement[] _RedPlatformsElements;
     private LevelDetectionPipeline.LevelElement[] _YellowPlatformsElements;
     private LevelDetectionPipeline.LevelElement[] _GreenPlatformsElements;
     private LevelDetectionPipeline.LevelElement[] _BluePlatformsElements;
+
+    private LevelDetectionPipeline.LevelElement[] _BlueEnemiesElements;
 
     public bool _ShouldRestartPipeline;
     private bool _WaitingState;
@@ -36,7 +49,7 @@ public class LevelCreator : MonoBehaviour {
         int cameraWidth = 0;
         int cameraHeight = 0;
 
-        int result = LevelDetectionPipeline.Init(ref cameraWidth, ref cameraHeight);
+        int result = LevelDetectionPipeline.Init(ref cameraWidth, ref cameraHeight, 0);
 
         if (result < 0) {
             Debug.LogWarning ("Failed to Open Camera");
@@ -47,13 +60,24 @@ public class LevelCreator : MonoBehaviour {
         CameraResolution = new Vector2(cameraWidth, cameraHeight);
         _Ready = true;
 
-        _DefaultPlatformInstances = new CubeMovementAndColor[3600];
-        GenerateDefaultPlatformsInstances();
+        _DefaultPlatformInstances = new CubeMovementAndColor[14400];
+        _DefaultEnemyInstances = new StationaryEnemy[m_MaxEnemiesInLevel];
+
+        GenerateDefaultPlatformsInstances ();
+        GenerateDefaultEnemies ();
     }
 
-    void GenerateDefaultPlatformsInstances () {
+    private void GenerateDefaultPlatformsInstances () {
         for (uint i = 0; i < _DefaultPlatformInstances.Length; i++) {
             _DefaultPlatformInstances[i] = Instantiate<CubeMovementAndColor> (m_DefaultPlatform, new Vector3 (0, 0, 0), Quaternion.identity);
+            _DefaultPlatformInstances[i].gameObject.SetActive (false);
+        }
+    }
+
+    private void GenerateDefaultEnemies () {
+        for (uint i = 0; i < m_MaxEnemiesInLevel; i++) {
+            _DefaultEnemyInstances[i] = Instantiate<StationaryEnemy> (m_DefaultEnemy, new Vector3 (0, 0, 0), Quaternion.identity);
+            _DefaultEnemyInstances[i].gameObject.SetActive (false);
         }
     }
 	
@@ -76,34 +100,52 @@ public class LevelCreator : MonoBehaviour {
             LevelDetectionPipeline.Close();
     }
 
-    void LevelCreation () {
+    private void LevelCreation () {
         if (_CurrentState == 9) {
             SetupDefaultPlatforms ();
-        } else if (_CurrentState == 10) {
+        }
+        else if (_CurrentState == 10) {
             GetDefaultPlatforms ();
-        } else if (_CurrentState == 11) {
+        }
+        else if (_CurrentState == 11) {
             MountDefaultPlatforms ();
-        } else if (_CurrentState == 12) {
+        }
+        else if (_CurrentState == 12) {
             SetupGravityPlatforms ();
-        } else if (_CurrentState == 13) {
+        }
+        else if (_CurrentState == 13) {
             GetGravityPlatforms ();
-        } else if (_CurrentState == 14) {
+        }
+        else if (_CurrentState == 14) {
             MountGravityPlatforms ();
-        } else if (_CurrentState == 18) {
+        }
+        else if (_CurrentState == 15) {
+            GetBlueEnemies ();
+        }
+        else if (_CurrentState == 16) {
+            MountBlueEnemies ();
+        }
+        else if (_CurrentState == 17) {
+            if (!_GameStarted)
+                SetupStartEnd ();
+        }
+        else if (_CurrentState == 18) {
             SetupWaitingState ();
-        } else if (_CurrentState == 19) {
+        }
+        else if (_CurrentState == 19) {
             WaitingState ();
-        } else if (_CurrentState == 20) {
+        }
+        else if (_CurrentState == 20) {
             SetStage (1);
         }
     }
 
-    void SetupDefaultPlatforms () {
+    private void SetupDefaultPlatforms () {
         LevelDetectionPipeline.SetupBlackPlatforms(ref _BlackPlatforms);
         _CurrentState = 10;
     }
 
-    void GetDefaultPlatforms () {
+    private void GetDefaultPlatforms () {
         _BlackPlatformsElements = new LevelDetectionPipeline.LevelElement[_BlackPlatforms];
 
         unsafe {
@@ -115,34 +157,35 @@ public class LevelCreator : MonoBehaviour {
         _CurrentState = 11;
     }
 
-    void MountDefaultPlatforms () {
+    private void MountDefaultPlatforms () {
         int i;
         for (i = 0; i < _BlackPlatformsElements.Length; i++) {
-            Vector3 position = new Vector3 (-1*_BlackPlatformsElements[i].Y, -1*_BlackPlatformsElements[i].X, 0);
+            Vector3 position = new Vector3 (_BlackPlatformsElements[i].Y, _BlackPlatformsElements[i].X*-1, 0);
             _DefaultPlatformInstances[i].gameObject.SetActive (true);
             _DefaultPlatformInstances[i].ChangeToColorAndPosition (position, Color.black, 2);
         }
 
         _IthPlatform = i;
 
-        for (int j = i; j < _DefaultPlatformInstances.Length; j++) {
-            _DefaultPlatformInstances[j].gameObject.SetActive (false);
-        }
-
         _CurrentState = 12;
     }
 
-    void SetupGravityPlatforms () {
+    private void SetupGravityPlatforms () {
         LevelDetectionPipeline.SetupRedPlatforms (ref _RedPlatforms);
         LevelDetectionPipeline.SetupYellowPlatforms (ref _YellowPlatforms);
         LevelDetectionPipeline.SetupGreenPlatforms (ref _GreenPlatforms);
         LevelDetectionPipeline.SetupBluePlatforms (ref _BluePlatforms);
 
+        Debug.Log ("Red: " + _RedPlatforms);
+        Debug.Log ("Yellow: " + _YellowPlatforms);
+        Debug.Log ("Green: " + _GreenPlatforms);
+        Debug.Log ("Blue: " + _BluePlatforms);
+
+
         _CurrentState = 13;
     }
 
-    void GetGravityPlatforms () {
-
+    private void GetGravityPlatforms () {
         _RedPlatformsElements = new LevelDetectionPipeline.LevelElement[_RedPlatforms];
         _YellowPlatformsElements = new LevelDetectionPipeline.LevelElement[_YellowPlatforms];
         _GreenPlatformsElements = new LevelDetectionPipeline.LevelElement[_GreenPlatforms];
@@ -170,36 +213,96 @@ public class LevelCreator : MonoBehaviour {
         _CurrentState = 14;
     }
 
-    void MountGravityPlatforms() {
-        int current;
-        for (current = 0; current < _RedPlatformsElements.Length; current++) {
-            Vector3 position = new Vector3 (-1 * _RedPlatformsElements[current].Y, -1 * _RedPlatformsElements[current].X, 0);
+    private void MountGravityPlatforms() {
+       int current;
+       for (current = 0; current < _RedPlatformsElements.Length; current++) {
+            Vector3 position = new Vector3 (_RedPlatformsElements[current].Y, -1 * _RedPlatformsElements[current].X, 0);
             _DefaultPlatformInstances[current + _IthPlatform].gameObject.SetActive (true);
             _DefaultPlatformInstances[current + _IthPlatform].ChangeToColorAndPosition (position, Color.red, 2);
         }
-
-        _IthPlatform = current;
+        
+        _IthPlatform += current;
         for (current = 0; current < _YellowPlatformsElements.Length; current++) {
-            Vector3 position = new Vector3 (-1 * _YellowPlatformsElements[current].Y, -1 * _YellowPlatformsElements[current].X, 0);
+            Vector3 position = new Vector3 (_YellowPlatformsElements[current].Y, -1 * _YellowPlatformsElements[current].X, 0);
             _DefaultPlatformInstances[current + _IthPlatform].gameObject.SetActive (true);
             _DefaultPlatformInstances[current + _IthPlatform].ChangeToColorAndPosition (position, Color.yellow, 2);
         }
-
-        _IthPlatform = current;
+        
+        _IthPlatform += current;
         for (current = 0; current < _GreenPlatformsElements.Length; current++) {
-            Vector3 position = new Vector3 (-1 * _GreenPlatformsElements[current].Y, -1 * _GreenPlatformsElements[current].X, 0);
+            Vector3 position = new Vector3 (_GreenPlatformsElements[current].Y, -1 * _GreenPlatformsElements[current].X, 0);
             _DefaultPlatformInstances[current + _IthPlatform].gameObject.SetActive (true);
             _DefaultPlatformInstances[current + _IthPlatform].ChangeToColorAndPosition (position, Color.green, 2);
         }
 
-        _IthPlatform = current;
+        _IthPlatform += current;
         for (current = 0; current < _BluePlatformsElements.Length; current++) {
-            Vector3 position = new Vector3 (-1 * _BluePlatformsElements[current].Y, -1 * _BluePlatformsElements[current].X, 0);
+            Vector3 position = new Vector3 (_BluePlatformsElements[current].Y, -1 * _BluePlatformsElements[current].X, 0);
             _DefaultPlatformInstances[current + _IthPlatform].gameObject.SetActive (true);
             _DefaultPlatformInstances[current + _IthPlatform].ChangeToColorAndPosition (position, Color.blue, 2);
         }
 
+        _IthPlatform += current;
+        for (int j = _IthPlatform; j < _DefaultPlatformInstances.Length; j++) {
+            _DefaultPlatformInstances[j].gameObject.SetActive (false);
+        }
+
+        _CurrentState = 15;
+    }
+
+    private void GetBlueEnemies () {
+        LevelDetectionPipeline.NumberOfBlueEnemies (ref _BlueEnemies);
+        _BlueEnemiesElements = new LevelDetectionPipeline.LevelElement[_BlueEnemies];
+        unsafe {
+            fixed (LevelDetectionPipeline.LevelElement* arrayAddress = _BlueEnemiesElements) {
+                LevelDetectionPipeline.GetBlueEnemies (arrayAddress, m_MaxEnemiesInLevel, ref _BlueEnemies);
+            }
+        }
+
+        _CurrentState = 16;
+    }
+
+    private void MountBlueEnemies () {
+        int i;
+        for (i = 0; i < m_MaxEnemiesInLevel && i < _BlueEnemies; i++) {
+            Vector3 position = new Vector3 (_BlueEnemiesElements[i].X, _BlueEnemiesElements[i].Y *-1, 0);
+            _DefaultEnemyInstances[i].gameObject.SetActive (true);
+            _DefaultEnemyInstances[i].transform.position = position;
+        }
+
+        for (; i < _DefaultEnemyInstances.Length; i++) {
+            _DefaultEnemyInstances[i].gameObject.SetActive (false);
+        }
+
+        _CurrentState = 17;
+    }
+
+    private void SetupStartEnd () {
+        LevelDetectionPipeline.LevelElement[] startEnd = new LevelDetectionPipeline.LevelElement[2];
+        bool ready = false;
+
+        unsafe {
+            fixed (LevelDetectionPipeline.LevelElement* startEndPointer = startEnd) {
+                ready = LevelDetectionPipeline.GetPlayerStartEnd (startEndPointer);
+            }
+        }
+
+       
+        if (ready) {
+            Debug.Log ("Game is Ready");
+            Vector3 startPos = new Vector3 (startEnd[0].X, startEnd[0].Y * -1, 0);
+            Instantiate (m_StartTransform, startPos, Quaternion.identity);
+            Vector3 endPos = new Vector3 (startEnd[1].X, startEnd[1].Y *-1, 0);
+            Instantiate (m_FinishTransform, endPos, Quaternion.identity);
+
+            Instantiate (m_Player, startPos, Quaternion.identity);
+            _GameStarted = true;
+        } else {
+            Debug.Log ("Game is not ready");
+        }
+
         _CurrentState = 18;
+
     }
 
     private void SetupWaitingState () {

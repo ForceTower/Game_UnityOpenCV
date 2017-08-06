@@ -11,7 +11,7 @@ public static class LevelDetectionPipeline {
     }
 
     [DllImport("OpenCV Unity Integration")]
-    public static extern int Init(ref int outCameraWidth, ref int outCameraHeight);
+    public static extern int Init(ref int outCameraWidth, ref int outCameraHeight, int useReference);
 
     [DllImport("OpenCV Unity Integration")]
     public static extern void Close();
@@ -51,6 +51,15 @@ public static class LevelDetectionPipeline {
 
     [DllImport("OpenCV Unity Integration")]
     public unsafe static extern void GetBluePlatforms(LevelElement* platforms, int maxPlatformsCount, ref int platformsCount);
+
+    [DllImport("OpenCV Unity Integration")]
+    public unsafe static extern bool GetPlayerStartEnd(LevelElement* startEndPointerArray);
+
+    [DllImport ("OpenCV Unity Integration")]
+    public static extern void NumberOfBlueEnemies (ref int enemiesCount);
+
+    [DllImport("OpenCV Unity Integration")]
+    public unsafe static extern void GetBlueEnemies(LevelElement* enemies, int maxEnemiesCount, ref int enemiesCount);
 
 
 }
