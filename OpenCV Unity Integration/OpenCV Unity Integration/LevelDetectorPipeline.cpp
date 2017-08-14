@@ -354,7 +354,7 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
                 return; //Only one should be selected
             }
         }
-        catch (const exception& ex) {
+        catch (const exception& ignored) {
             //cout << "Exception :" << ex.what () << endl;
         }
 	}
