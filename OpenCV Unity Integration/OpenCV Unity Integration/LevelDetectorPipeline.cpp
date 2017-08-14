@@ -20,9 +20,9 @@ void ImageEnhancement ();
 void RedDarkSeparation ();
 void BlueGreenYellowSeparation ();
 void PrepareStartEndEnemies ();
-void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& saved = Rect());
-void FindCircle (Mat& image, vector<Point>& foundPoints);
-void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVector, Rect ignore = Rect());
+void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& saved);
+void FindCircle (Mat& image, vector<Point>& foundPoints, vector<Rect>& rects);
+void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVector, Rect ignore);
 
 Size _ImageSize;		//Default Resize size
 
@@ -30,6 +30,10 @@ VideoCapture _Capture;	//Camera Buffer
 int _CurrentState;		//State Machine State
 
 Mat _InputImage;		//InputImage received by any source
+Mat _OriginalImage;
+Mat _OriginalRed;
+Mat _OriginalGreen;
+Mat _OriginalBlue;
 Mat _RedImage;			//Only Red
 Mat _BlueImage;			//Only Blue
 Mat _GreenImage;		//Only Green
@@ -42,6 +46,7 @@ vector<Point> _LevelBlueEnemies;	//Level Blue Enemies
 
 Rect _GreenRect;		//Selected End
 Rect _RedRect;			//Selected Start
+vector<Rect> enemies;
 
 LevelElement _PlayerStart;
 LevelElement _PlayerFinish;
@@ -108,17 +113,17 @@ extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn,
 		BlueGreenYellowSeparation ();
 
 	else if (_CurrentState == 5) { //Level Player Start
-		FindCircleCircle (_RedImage, _LevelStartPoints, _RedRect);
+		FindCircleCircle (_OriginalRed, _LevelStartPoints, _RedRect);
 		_CurrentState = 6;
 	}
 
 	else if (_CurrentState == 6) { //Level Player Finish
-		FindCircleCircle (_GreenImage, _LevelEndPoints, _GreenRect);
+		FindCircleCircle (_OriginalGreen, _LevelEndPoints, _GreenRect);
 		_CurrentState = 7;
 	}
 
 	else if (_CurrentState == 7) { //Blue Enemies
-		FindCircle (_BlueImage, _LevelBlueEnemies);
+		FindCircle (_OriginalBlue, _LevelBlueEnemies, enemies);
 		_CurrentState = 8;
 	}
 
@@ -133,19 +138,19 @@ extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn,
 extern "C" void __declspec(dllexport) __stdcall SetupBlackPlatforms (int& number) {
     namedWindow ("Black");
     imshow ("Black", _DarkImage);
-	CountSelectedInImage (_DarkImage, number, _BlackPlatforms);
+    CountSelectedInImage (_DarkImage, number, _BlackPlatforms, Rect (0, 0, 0, 0));
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupYellowPlatforms (int& number) {
     namedWindow ("Yellow");
     imshow ("Yellow", _YellowImage);
-	CountSelectedInImage (_YellowImage, number, _YellowPlatforms);
+	CountSelectedInImage (_YellowImage, number, _YellowPlatforms, Rect (0, 0, 0, 0));
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupBluePlatforms (int& number) {
     namedWindow ("Blue");
     imshow ("Blue", _BlueImage);
-	CountSelectedInImage (_BlueImage, number, _BluePlatforms);
+	CountSelectedInImage (_BlueImage, number, _BluePlatforms, Rect (0, 0, 0, 0));
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupGreenPlatforms (int& number) {
@@ -224,16 +229,16 @@ extern "C" void __declspec(dllexport) __stdcall GetBlueEnemies (LevelElement* en
 
 void TakePicture (int useReference) {
     if (useReference == 0)
-        _Capture >> _InputImage;
+        _Capture >> _OriginalImage;
     else {
         cv::String name = cv::String ("C:/Users/joaop/Documents/FinalProject-CompVisual/basic.png");
-        _InputImage = imread (name);
+        _OriginalImage = imread (name);
     }
 
 	//Resizes the image
     namedWindow ("Original Image");
-    imshow ("Original Image", _InputImage);
-	resize (_InputImage, _InputImage, _ImageSize);
+    imshow ("Original Image", _OriginalImage);
+	resize (_OriginalImage, _InputImage, _ImageSize);
     namedWindow ("Resized Image");
     imshow ("Resized Image", _InputImage);
 
@@ -243,9 +248,11 @@ void TakePicture (int useReference) {
 void ImageEnhancement () {
 	//Blur Image a little
 	medianBlur (_InputImage, _InputImage, 3);
+    medianBlur (_OriginalImage, _OriginalImage, 3);
 
 	//Convert Image color to HSV
 	cvtColor (_InputImage, _InputImage, COLOR_BGR2HSV);
+    cvtColor (_OriginalImage, _OriginalImage, COLOR_BGR2HSV);
 
 	_CurrentState = 3;
 }
@@ -265,6 +272,21 @@ void RedDarkSeparation () {
 	// Dark Detection
 	inRange (_InputImage, Scalar (0, 0, 0), Scalar (180, 255, 80), _DarkImage);
 
+
+    Mat lowerRedOri;
+    //Threshold Lower Red in HSV
+    inRange (_OriginalImage, Scalar (0, 100, 100), Scalar (10, 255, 255), lowerRedOri);
+
+    //Threshold Upper Red in HSV
+    Mat upperRedOri;
+    inRange (_OriginalImage, Scalar (160, 100, 100), Scalar (179, 255, 255), upperRedOri);
+
+    //Red in Image is the result of the OR operation between upper and lower hsv
+    bitwise_or (lowerRedOri, upperRedOri, _OriginalRed);
+
+    namedWindow ("Original Red");
+    imshow ("Original Red", _RedImage);
+
 	_CurrentState = 4;
 }
 
@@ -278,6 +300,12 @@ void BlueGreenYellowSeparation () {
 	// Yellow Detection
 	inRange (_InputImage, Scalar (23, 70, 70), Scalar (35, 255, 255), _YellowImage);
 
+    // Original Image Green Separation
+    inRange (_OriginalImage, Scalar (35, 70, 70), Scalar (75, 255, 255), _OriginalGreen);
+
+    // Originak Inage Blue Separation
+    inRange (_OriginalImage, Scalar (85, 70, 70), Scalar (135, 255, 255), _OriginalBlue);
+
 	_CurrentState = 5;
 }
 
@@ -285,8 +313,9 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 	foundPoints.clear ();
 
 	vector<Vec3f> circles;
-	//Aply Hough Transform to detect Circles
-	HoughCircles (image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 10, 100, 4, 0, 0);
+	//Apply Hough Transform to detect Circles
+	HoughCircles (image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 8, 100, 20, 0, 0);
+    cout << "Found " << circles.size() << " Circles!" << endl;
 
 	//For each circle detected
 	for (size_t current_circle = 0; current_circle < circles.size (); ++current_circle) {
@@ -294,7 +323,7 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 		int radius = round (circles[current_circle][2]); //Calc the radius
 
 		Rect rect; //Create a rectangle that will be used to crop the image
-		rect.x = center.x - radius; //Setup the rectangle start points ans size 
+		rect.x = center.x - radius; //Setup the rectangle start points and size 
 		rect.y = center.y - radius;
 		rect.width = radius * 2 - 1;
 		rect.height = radius * 2 - 1;
@@ -304,12 +333,24 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 
             vector<Vec3f> insideCircles;
             //Apply Hough Transform im the cropped image to find circles inside the circle
-            HoughCircles (croppedImage, insideCircles, CV_HOUGH_GRADIENT, 1, croppedImage.rows / 10, 100, 4, 0, 0);
+            HoughCircles (croppedImage, insideCircles, CV_HOUGH_GRADIENT, 1, croppedImage.rows / 8, 100, 20, 0, 0);
 
             //If detected a circle inside a circle, insert it in the vector
             if (!insideCircles.empty ()) {
-                foundPoints.push_back (center);
-                save = rect;
+                Point resampled = center;
+                resampled.x = resampled.x * _InputImage.rows / _OriginalImage.rows;
+                resampled.y = resampled.y * _InputImage.cols / _OriginalImage.cols;
+                foundPoints.push_back (resampled);
+
+                int re_radius = radius * _InputImage.rows / _OriginalImage.rows;
+                Rect resampledRect;
+                resampledRect.x = resampled.x - re_radius;
+                resampledRect.y = resampled.y - re_radius;
+                resampledRect.width = re_radius * 2 - 1;
+                resampledRect.height = re_radius * 2 - 1;
+
+                save = resampledRect;
+                cout << "Found Circle Circle!" << endl;
                 return; //Only one should be selected
             }
         }
@@ -319,18 +360,32 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 	}
 }
 
-void FindCircle (Mat& image, vector<Point>& foundPoints) {
+void FindCircle (Mat& image, vector<Point>& foundPoints, vector<Rect>& rects) {
 	foundPoints.clear ();
+    rects.clear ();
 
 	vector<Vec3f> circles;
-	//Aply Hough Transform to detect Circles
+	//Apply Hough Transform to detect Circles
 	HoughCircles (image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 8, 100, 20, 0, 0);
 
 	//For each circle detected
 	for (size_t current_circle = 0; current_circle < circles.size (); ++current_circle) {
 		Point center (round (circles[current_circle][0]), round (circles[current_circle][1])); //Find the center
-		
-		foundPoints.push_back (center); //Save the center point of the circle
+        int radius = round (circles[current_circle][2]);
+
+        Point resampled = center;
+        resampled.x = resampled.x * _InputImage.rows / _OriginalImage.rows;
+        resampled.y = resampled.y * _InputImage.cols / _OriginalImage.cols;
+		foundPoints.push_back (resampled); //Save the center point of the circle
+
+        int re_radius = radius * _InputImage.rows / _OriginalImage.rows;
+        Rect resampledRect;
+        resampledRect.x = resampled.x - re_radius;
+        resampledRect.y = resampled.y - re_radius;
+        resampledRect.width = re_radius * 2 - 1;
+        resampledRect.height = re_radius * 2 - 1;
+
+        rects.push_back (resampledRect);
 	}
 }
 
@@ -371,7 +426,7 @@ void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVec
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			if (image.at<uchar> (i, j) /*&& !ignore.contains(Point(i, j))*/) {
+			if (image.at<uchar> (i, j) && !ignore.contains(Point(i, j))) {
 				count++;
                 LevelElement element (i, j);
 				fillVector.push_back (element);
@@ -390,7 +445,7 @@ int main () {
     b = 0;
     while (1) {
         if (b < 9)
-            DetectionPipeline (a, b);
+            DetectionPipeline (a, b, 1);
         else {
             int n;
             SetupBlackPlatforms (n);
@@ -407,4 +462,5 @@ int main () {
 
         waitKey (30);
     }
-}*/
+}
+*/
