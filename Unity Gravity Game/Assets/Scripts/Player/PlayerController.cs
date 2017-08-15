@@ -41,7 +41,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     public void TakeDamage (int ammount) {
-        CurrentHealth--;
+        CurrentHealth -= ammount;
         if (CurrentHealth <= 0) {
             gameObject.SetActive (false);
         }

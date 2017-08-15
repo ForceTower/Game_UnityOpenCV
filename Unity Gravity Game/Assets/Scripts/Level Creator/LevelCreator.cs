@@ -96,6 +96,11 @@ public class LevelCreator : MonoBehaviour {
         else {
             LevelCreation ();
         }
+
+        if (Input.GetKeyDown (KeyCode.F)) {
+            m_StartOnNext = true;
+            m_StartPos = new Vector3 (0, 0, 0);
+        }
     }
 
     void OnApplicationQuit () {
