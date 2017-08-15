@@ -30,7 +30,7 @@ public class CharacterController : MonoBehaviour {
     }
 
     public void Move (Vector3 moveVector, bool jump) {
-        //CheckGround ();
+        CheckGround ();
 
         if (m_IsGrounded)
             GroundedCommands (moveVector, jump);
@@ -109,7 +109,7 @@ public class CharacterController : MonoBehaviour {
         m_RigidBody.velocity = Vector3.zero;
     }
 
-    /*
+    
     void CheckGround () {
         RaycastHit hitInfo;
 
@@ -128,8 +128,9 @@ public class CharacterController : MonoBehaviour {
             m_IsGrounded = false;
             m_GroundNormal = Vector3.up;
         }
-    }*/
+    }
 
+    /*
     public void OnCollisionEnter (Collision collision) {
         m_IsGrounded = true;
         m_IsGrounded = true;
@@ -144,6 +145,7 @@ public class CharacterController : MonoBehaviour {
         m_IsGrounded = false;
         m_GroundNormal = Vector3.up;
     }
+    */
 
     public void ChangeColor () {
         if (GravityController.Instance.m_CurrentState == GravityController.GravityState.Down)
