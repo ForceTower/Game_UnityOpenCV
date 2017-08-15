@@ -138,32 +138,32 @@ extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn,
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupBlackPlatforms (int& number) {
-    namedWindow ("Black");
-    imshow ("Black", _DarkImage);
+    //namedWindow ("Black");
+    //imshow ("Black", _DarkImage);
     CountSelectedInImage (_DarkImage, number, _BlackPlatforms, Rect (0, 0, 0, 0));
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupYellowPlatforms (int& number) {
-    namedWindow ("Yellow");
-    imshow ("Yellow", _YellowImage);
+    //namedWindow ("Yellow");
+    //imshow ("Yellow", _YellowImage);
 	CountSelectedInImage (_YellowImage, number, _YellowPlatforms, Rect (0, 0, 0, 0));
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupBluePlatforms (int& number) {
-    namedWindow ("Blue");
-    imshow ("Blue", _BlueImage);
+    //namedWindow ("Blue");
+    //imshow ("Blue", _BlueImage);
 	CountSelectedInImageWithRects (_BlueImage, number, _BluePlatforms, enemies);
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupGreenPlatforms (int& number) {
-    namedWindow ("Green");
-    imshow ("Green", _GreenImage);
+    //namedWindow ("Green");
+    //imshow ("Green", _GreenImage);
 	CountSelectedInImage (_GreenImage, number, _GreenPlatforms, _GreenRect);
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupRedPlatforms (int& number) {
-    namedWindow ("Red");
-    imshow ("Red", _RedImage);
+    //namedWindow ("Red");
+    //imshow ("Red", _RedImage);
 	CountSelectedInImage (_RedImage, number, _RedPlatforms, _RedRect);
 }
 
@@ -241,8 +241,8 @@ void TakePicture (int useReference) {
     namedWindow ("Original Image");
     imshow ("Original Image", _OriginalImage);
 	resize (_OriginalImage, _InputImage, _ImageSize);
-    namedWindow ("Resized Image");
-    imshow ("Resized Image", _InputImage);
+    //namedWindow ("Resized Image");
+    //imshow ("Resized Image", _InputImage);
 
 	_CurrentState = 2;
 }
@@ -286,8 +286,8 @@ void RedDarkSeparation () {
     //Red in Image is the result of the OR operation between upper and lower hsv
     bitwise_or (lowerRedOri, upperRedOri, _OriginalRed);
 
-    namedWindow ("Original Red");
-    imshow ("Original Red", _RedImage);
+    //namedWindow ("Original Red");
+    //imshow ("Original Red", _RedImage);
 
 	_CurrentState = 4;
 }
@@ -317,7 +317,7 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 	vector<Vec3f> circles;
 	//Apply Hough Transform to detect Circles
 	HoughCircles (image, circles, CV_HOUGH_GRADIENT, 1, image.rows / 8, 100, 20, 0, 0);
-    cout << "Found " << circles.size() << " Circles!" << endl;
+    //cout << "Found " << circles.size() << " Circles!" << endl;
 
 	//For each circle detected
 	for (size_t current_circle = 0; current_circle < circles.size (); ++current_circle) {
@@ -352,7 +352,7 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
                 resampledRect.height = re_radius * 2 + 3;
 
                 save = resampledRect;
-                cout << "Found Circle Circle!" << endl;
+                //cout << "Found Circle Circle!" << endl;
                 return; //Only one should be selected
             }
         }
@@ -426,7 +426,7 @@ void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVec
 
 	int count = 0;
 
-    cout << "x:" << ignore.x << " y:" << ignore.y << " h:" << ignore.height << " w:" << ignore.width << endl;
+    //cout << "x:" << ignore.x << " y:" << ignore.y << " h:" << ignore.height << " w:" << ignore.width << endl;
     
     rectangle (image, ignore, Scalar (0, 0, 0), -1);
 
@@ -460,7 +460,7 @@ void CountSelectedInImageWithRects (Mat image, int& number, vector<LevelElement>
     CountSelectedInImage (image, number, fillVector, Rect (0, 0, 0, 0));
 }
 
-
+/*
 int main () {
     int a = 0, b = 0;
     Init (a, b);
@@ -489,3 +489,4 @@ int main () {
         waitKey (30);
     }
 }
+*/
