@@ -25,6 +25,7 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& saved);
 void FindCircle (Mat& image, vector<Point>& foundPoints, vector<Rect>& rects);
 void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVector, Rect ignore);
 void CountSelectedInImageWithRects (Mat image, int& number, vector<LevelElement>& fillVector, vector<Rect> ignore);
+void PrepareHighBoostedImage ();
 
 Size _ImageSize;		//Default Resize size
 
@@ -36,6 +37,7 @@ Mat _OriginalImage;
 Mat _OriginalRed;
 Mat _OriginalGreen;
 Mat _OriginalBlue;
+Mat _HighBoostedImage;
 Mat _RedImage;			//Only Red
 Mat _BlueImage;			//Only Blue
 Mat _GreenImage;		//Only Green
@@ -58,6 +60,7 @@ vector <LevelElement> _RedPlatforms;
 vector <LevelElement> _BluePlatforms;
 vector <LevelElement> _GreenPlatforms;
 vector <LevelElement> _BlueEnemies;
+vector <LevelElement> _BorderPoints;
 
 bool _FoundStart;
 bool _FoundFinish;
@@ -133,6 +136,10 @@ extern "C" void __declspec(dllexport) __stdcall DetectionPipeline (int& stateIn,
 		PrepareStartEndEnemies ();
 		_CurrentState = 9;
 	}
+
+    else if (_CurrentState == 9) {
+        PrepareHighBoostedImage ();
+    }
 
 	stateOut = _CurrentState;
 }
@@ -229,6 +236,14 @@ extern "C" void __declspec(dllexport) __stdcall GetBlueEnemies (LevelElement* en
     enemiesCount = _BlueEnemies.size ();
 }
 
+extern "C" void __declspec(dllexport) __stdcall GetlevelBordersFrontiers (LevelElement* borders, int maxBorderCount, int& borderCount) {
+    for (size_t i = 0; i < _BorderPoints.size () && i < maxBorderCount; i++) {
+        borders[i] = _BorderPoints.at (i);
+    }
+
+    borderCount = _BorderPoints.size ();
+}
+
 void TakePicture (int useReference) {
     if (useReference == 0)
         _Capture >> _OriginalImage;
@@ -238,8 +253,8 @@ void TakePicture (int useReference) {
     }
 
 	//Resizes the image
-    namedWindow ("Original Image");
-    imshow ("Original Image", _OriginalImage);
+    //namedWindow ("Original Image");
+    //imshow ("Original Image", _OriginalImage);
 	resize (_OriginalImage, _InputImage, _ImageSize);
     //namedWindow ("Resized Image");
     //imshow ("Resized Image", _InputImage);
@@ -255,6 +270,18 @@ void ImageEnhancement () {
 	//Convert Image color to HSV
 	cvtColor (_InputImage, _InputImage, COLOR_BGR2HSV);
     cvtColor (_OriginalImage, _OriginalImage, COLOR_BGR2HSV);
+
+    Mat kernel (3, 3, CV_32F, cv::Scalar (0));
+    kernel.at<float> (1, 1) = 8.0;
+    kernel.at<float> (0, 0) = -1.0;
+    kernel.at<float> (0, 2) = -1.0;
+    kernel.at<float> (2, 0) = -1.0;
+    kernel.at<float> (2, 2) = -1.0;
+    kernel.at<float> (0, 1) = -1.0;
+    kernel.at<float> (2, 1) = -1.0;
+    kernel.at<float> (1, 0) = -1.0;
+    kernel.at<float> (1, 2) = -1.0;
+    filter2D (_OriginalImage, _HighBoostedImage, _OriginalImage.depth (), kernel);
 
 	_CurrentState = 3;
 }
@@ -458,6 +485,22 @@ void CountSelectedInImageWithRects (Mat image, int& number, vector<LevelElement>
     }
 
     CountSelectedInImage (image, number, fillVector, Rect (0, 0, 0, 0));
+}
+
+void PrepareHighBoostedImage () {
+    _BorderPoints.clear ();
+
+    int height = _HighBoostedImage.rows;
+    int width = _HighBoostedImage.cols;
+
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            if (_HighBoostedImage.at<uchar> (i, j)) {
+                LevelElement element (i, j);
+                _BorderPoints.push_back (element);
+            }
+        }
+    }
 }
 
 /*
