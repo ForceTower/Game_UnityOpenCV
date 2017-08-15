@@ -126,6 +126,9 @@
   <ItemGroup>
     <ClCompile Include="LevelDetectorPipeline.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="LevelDetectorPipeline.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

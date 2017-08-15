@@ -4,6 +4,7 @@
 #include <opencv2\imgcodecs.hpp>
 #include <vector>
 #include <iostream>
+#include "LevelDetectorPipeline.h"
 
 using namespace std;
 using namespace cv;
@@ -23,6 +24,7 @@ void PrepareStartEndEnemies ();
 void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& saved);
 void FindCircle (Mat& image, vector<Point>& foundPoints, vector<Rect>& rects);
 void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVector, Rect ignore);
+void CountSelectedInImageWithRects (Mat image, int& number, vector<LevelElement>& fillVector, vector<Rect> ignore);
 
 Size _ImageSize;		//Default Resize size
 
@@ -150,7 +152,7 @@ extern "C" void __declspec(dllexport) __stdcall SetupYellowPlatforms (int& numbe
 extern "C" void __declspec(dllexport) __stdcall SetupBluePlatforms (int& number) {
     namedWindow ("Blue");
     imshow ("Blue", _BlueImage);
-	CountSelectedInImage (_BlueImage, number, _BluePlatforms, Rect (0, 0, 0, 0));
+	CountSelectedInImageWithRects (_BlueImage, number, _BluePlatforms, enemies);
 }
 
 extern "C" void __declspec(dllexport) __stdcall SetupGreenPlatforms (int& number) {
@@ -344,10 +346,10 @@ void FindCircleCircle (Mat& image, vector<Point>& foundPoints, Rect& save) {
 
                 int re_radius = radius * _InputImage.rows / _OriginalImage.rows;
                 Rect resampledRect;
-                resampledRect.x = resampled.x - re_radius;
-                resampledRect.y = resampled.y - re_radius;
-                resampledRect.width = re_radius * 2 - 1;
-                resampledRect.height = re_radius * 2 - 1;
+                resampledRect.x = resampled.x - re_radius - 1;
+                resampledRect.y = resampled.y - re_radius - 1;
+                resampledRect.width = re_radius * 2 + 3;
+                resampledRect.height = re_radius * 2 + 3;
 
                 save = resampledRect;
                 cout << "Found Circle Circle!" << endl;
@@ -380,10 +382,10 @@ void FindCircle (Mat& image, vector<Point>& foundPoints, vector<Rect>& rects) {
 
         int re_radius = radius * _InputImage.rows / _OriginalImage.rows;
         Rect resampledRect;
-        resampledRect.x = resampled.x - re_radius;
-        resampledRect.y = resampled.y - re_radius;
-        resampledRect.width = re_radius * 2 - 1;
-        resampledRect.height = re_radius * 2 - 1;
+        resampledRect.x = resampled.x - re_radius - 1;
+        resampledRect.y = resampled.y - re_radius - 1;
+        resampledRect.width = re_radius * 2 + 4;
+        resampledRect.height = re_radius * 2 + 4;
 
         rects.push_back (resampledRect);
 	}
@@ -424,9 +426,21 @@ void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVec
 
 	int count = 0;
 
+    cout << "x:" << ignore.x << " y:" << ignore.y << " h:" << ignore.height << " w:" << ignore.width << endl;
+    
+    rectangle (image, ignore, Scalar (0, 0, 0), -1);
+
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			if (image.at<uchar> (i, j) && !ignore.contains(Point(i, j))) {
+            /*if (ignore.contains (Point (i, j))) {
+                cout << "Ignored Pixel: X=" << i << " Y=" << j << endl;
+                if (image.at<uchar> (i, j) > 1)
+                    cout << "Pixel: X: " << i << " Y: " << j << endl;
+
+                continue;
+            }*/
+
+			if (image.at<uchar> (i, j)) {
 				count++;
                 LevelElement element (i, j);
 				fillVector.push_back (element);
@@ -438,7 +452,15 @@ void CountSelectedInImage (Mat image, int& number, vector<LevelElement>& fillVec
 	number = count;
 }
 
-/*
+void CountSelectedInImageWithRects (Mat image, int& number, vector<LevelElement>& fillVector, vector<Rect> ignore) {
+    for (auto rect : ignore) {
+        rectangle (image, rect, Scalar (0, 0, 0), -1);
+    }
+
+    CountSelectedInImage (image, number, fillVector, Rect (0, 0, 0, 0));
+}
+
+
 int main () {
     int a = 0, b = 0;
     Init (a, b);
@@ -453,6 +475,10 @@ int main () {
             LevelElement k[3800];
             int a;
             GetBlackPlatforms (k, n, a);
+
+            SetupRedPlatforms (n);
+            GetRedPlatforms (k, n, a);
+            cout << "Detected Red: " << n << endl;
             //SetState (1);
             waitKey (1000);
             b = 1;
@@ -463,4 +489,3 @@ int main () {
         waitKey (30);
     }
 }
-*/

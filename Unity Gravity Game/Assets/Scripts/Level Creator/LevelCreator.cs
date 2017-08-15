@@ -44,6 +44,9 @@ public class LevelCreator : MonoBehaviour {
 
     private int _IthPlatform;
 
+    private bool m_StartOnNext;
+    private Vector3 m_StartPos;
+
     // Use this for initialization
     void Start () {
         int cameraWidth = 0;
@@ -295,8 +298,14 @@ public class LevelCreator : MonoBehaviour {
             Vector3 endPos = new Vector3 (startEnd[1].X, startEnd[1].Y *-1, 0);
             Instantiate (m_FinishTransform, endPos, Quaternion.identity);
 
-            Instantiate (m_Player, startPos, Quaternion.identity);
-            _GameStarted = true;
+            if (m_StartOnNext && !_GameStarted) {
+                m_StartPos.z = 0;
+                Transform player = Instantiate (m_Player, m_StartPos, Quaternion.identity);
+                _GameStarted = true;
+                CameraFollow.Instance.SetTarget (player);
+            }
+            m_StartOnNext = true;
+            m_StartPos = startPos;
         } else {
             Debug.Log ("Game is not ready");
         }

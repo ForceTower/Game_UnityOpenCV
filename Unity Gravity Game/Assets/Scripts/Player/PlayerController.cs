@@ -2,27 +2,43 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent (typeof (CharacterController))]
 public class PlayerController : MonoBehaviour {
-    public enum GravityModifier {
-        NONE = 0,
-        UP = 1,
-        DOWN = 2,
-        LEFT = 3,
-        RIGHT = 4
-    };
+    public static PlayerController Instance { get; set; }
 
-    private GravityModifier _CurrentGravity;
+    private CharacterController character;
+    private Vector3 m_Start_Position;
 
-    public float _GravityForce;
-    public float _MaxVelocity;
+    private void Awake () {
+        Instance = this;
+    }
 
     // Use this for initialization
     void Start () {
-		
+        m_Start_Position = transform.position;
+        character = GetComponent<CharacterController> ();
     }
-	
+
     // Update is called once per frame
-    void Update () {
-		
+    void FixedUpdate () {
+        PlayerInput ();
+    }
+
+    private void PlayerInput () {
+        float x = Input.GetAxis ("Horizontal");
+        float y = Input.GetAxis ("Vertical");
+
+        bool jump = Input.GetButtonDown ("Jump");
+
+        Vector3 move = new Vector3 (x, y, 0) * character.m_Speed;
+
+        move *= Time.deltaTime;
+
+        character.Move (move, jump);
+    }
+
+    public void Reset () {
+        transform.position = m_Start_Position;
+        character.Stop ();
     }
 }

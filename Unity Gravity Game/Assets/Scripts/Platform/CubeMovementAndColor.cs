@@ -12,7 +12,7 @@ public class CubeMovementAndColor : MonoBehaviour {
     private Color _EndColor;
     private float _ExpectedTime;
 
-    private PlayerController.GravityModifier _CurrentGravity;
+    private GravityController.GravityState _CurrentGravity;
 
     // Use this for initialization
     void Start () {
@@ -51,16 +51,18 @@ public class CubeMovementAndColor : MonoBehaviour {
 
     void OnFinish () {
         if (_EndColor == Color.red)
-            _CurrentGravity = PlayerController.GravityModifier.UP;
+            _CurrentGravity = GravityController.GravityState.Up;
         else if (_EndColor == Color.blue)
-            _CurrentGravity = PlayerController.GravityModifier.DOWN;
+            _CurrentGravity = GravityController.GravityState.Down;
         else if (_EndColor == Color.green)
-            _CurrentGravity = PlayerController.GravityModifier.LEFT;
+            _CurrentGravity = GravityController.GravityState.Left;
         else if (_EndColor == Color.yellow)
-            _CurrentGravity = PlayerController.GravityModifier.RIGHT;
+            _CurrentGravity = GravityController.GravityState.Right;
         else if (_EndColor == Color.black)
-            _CurrentGravity = PlayerController.GravityModifier.NONE;
+            _CurrentGravity = GravityController.GravityState.None;
 
         gameObject.tag = "Gravity Type " + _CurrentGravity;
+
+        GetComponent<GravityPlatform> ().SetCurrentAction (_CurrentGravity);
     }
 }
