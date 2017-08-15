@@ -5,6 +5,8 @@ using UnityEngine;
 [RequireComponent (typeof (CharacterController))]
 public class PlayerController : MonoBehaviour {
     public static PlayerController Instance { get; set; }
+    public int MaxHealth;
+    public int CurrentHealth;
 
     private CharacterController character;
     private Vector3 m_Start_Position;
@@ -17,6 +19,7 @@ public class PlayerController : MonoBehaviour {
     void Start () {
         m_Start_Position = transform.position;
         character = GetComponent<CharacterController> ();
+        CurrentHealth = MaxHealth;
     }
 
     // Update is called once per frame
@@ -37,8 +40,16 @@ public class PlayerController : MonoBehaviour {
         character.Move (move, jump);
     }
 
+    public void TakeDamage (int ammount) {
+        CurrentHealth--;
+        if (CurrentHealth <= 0) {
+            gameObject.SetActive (false);
+        }
+    }
+
     public void Reset () {
         transform.position = m_Start_Position;
         character.Stop ();
+        CurrentHealth = MaxHealth;
     }
 }
